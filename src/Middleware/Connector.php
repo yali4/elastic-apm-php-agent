@@ -2,6 +2,7 @@
 
 namespace PhilKra\Middleware;
 
+use GuzzleHttp\Message\ResponseInterface;
 use PhilKra\Agent;
 use PhilKra\Events\EventBean;
 use PhilKra\Stores\TransactionsStore;
@@ -98,9 +99,9 @@ class Connector
      *
      * @link https://www.elastic.co/guide/en/apm/server/7.3/server-info.html
      *
-     * @return Response
+     * @return ResponseInterface
      */
-    public function getInfo() : \GuzzleHttp\Psr7\Response
+    public function getInfo() : ResponseInterface
     {
         return $this->client->get(
             $this->config->get('serverUrl'),

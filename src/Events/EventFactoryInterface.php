@@ -12,7 +12,7 @@ interface EventFactoryInterface
      *
      * @return Error
      */
-    public function newError(\Throwable $throwable, array $contexts, ?Transaction $parent = null): Error;
+    public function newError(\Throwable $throwable, array $contexts, Transaction $parent = null): Error;
 
     /**
      * Creates a new transaction

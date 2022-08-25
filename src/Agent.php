@@ -2,6 +2,7 @@
 
 namespace PhilKra;
 
+use GuzzleHttp\Message\ResponseInterface;
 use PhilKra\Events\DefaultEventFactory;
 use PhilKra\Events\EventFactoryInterface;
 use PhilKra\Stores\TransactionsStore;
@@ -12,7 +13,6 @@ use PhilKra\Events\Metadata;
 use PhilKra\Helper\Timer;
 use PhilKra\Helper\Config;
 use PhilKra\Middleware\Connector;
-use PhilKra\Exception\Transaction\DuplicateTransactionNameException;
 use PhilKra\Exception\Transaction\UnknownTransactionException;
 
 /**
@@ -137,17 +137,15 @@ class Agent
      *
      * @link https://www.elastic.co/guide/en/apm/server/7.3/server-info.html
      *
-     * @return Response
+     * @return ResponseInterface
      */
-    public function info() : \GuzzleHttp\Psr7\Response
+    public function info() : ResponseInterface
     {
         return $this->connector->getInfo();
     }
 
     /**
      * Start the Transaction capturing
-     *
-     * @throws \PhilKra\Exception\Transaction\DuplicateTransactionNameException
      *
      * @param string $name
      * @param array  $context
@@ -156,13 +154,11 @@ class Agent
      */
     public function startTransaction(string $name, array $context = [], float $start = null): Transaction
     {
-        // Create and Store Transaction
-        $this->transactionsStore->register(
-            $this->factory()->newTransaction($name, array_replace_recursive($this->sharedContext, $context), $start)
-        );
-
         // Start the Transaction
-        $transaction = $this->transactionsStore->fetch($name);
+        $transaction = $this->factory()->newTransaction($name, array_replace_recursive($this->sharedContext, $context), $start);
+
+        // Create and Store Transaction
+        $this->transactionsStore->register($transaction);
 
         if (null === $start) {
             $transaction->start();
@@ -218,7 +214,7 @@ class Agent
      *
      * @return void
      */
-    public function captureThrowable(\Throwable $thrown, array $context = [], ?Transaction $parent = null)
+    public function captureThrowable(\Throwable $thrown, array $context = [], Transaction $parent = null)
     {
         $this->putEvent($this->factory()->newError($thrown, array_replace_recursive($this->sharedContext, $context), $parent));
     }

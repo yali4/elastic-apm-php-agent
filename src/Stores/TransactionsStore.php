@@ -3,7 +3,6 @@
 namespace PhilKra\Stores;
 
 use PhilKra\Events\Transaction;
-use PhilKra\Exception\Transaction\DuplicateTransactionNameException;
 
 /**
  *
@@ -15,35 +14,33 @@ class TransactionsStore extends Store
     /**
      * Register a Transaction
      *
-     * @throws \PhilKra\Exception\Transaction\DuplicateTransactionNameException
-     *
      * @param \PhilKra\Events\Transaction $transaction
      *
      * @return void
      */
     public function register(Transaction $transaction)
     {
-        $name = $transaction->getTransactionName();
-
-        // Do not override the
-        if (isset($this->store[$name]) === true) {
-            throw new DuplicateTransactionNameException($name);
-        }
-
         // Push to Store
-        $this->store[$name] = $transaction;
+        $this->store[] = $transaction;
     }
 
     /**
      * Fetch a Transaction from the Store
      *
-     * @param final string $name
+     * @param string $name
      *
      * @return mixed: \PhilKra\Events\Transaction | null
      */
     public function fetch(string $name)
     {
-        return $this->store[$name] ?? null;
+        /** @var Transaction $transaction */
+        foreach ($this->store as $transaction) {
+            if ($transaction->getTransactionName() === $name) {
+                return $transaction;
+            }
+        }
+
+        return null;
     }
 
     /**
